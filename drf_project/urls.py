@@ -1,11 +1,10 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
 from .view import ping
 
-
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('ping/', ping, name="ping"),
-    path('', include("movies.urls")),
+    path("admin/", admin.site.urls),
+    path("ping/", ping, name="ping"),
+    path("", include("movies.urls")),
 ]

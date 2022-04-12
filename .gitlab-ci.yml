@@ -1,0 +1,42 @@
+image: docker:stable
+
+stages:
+  - build
+  - test
+
+variables:
+  IMAGE: https://docs.gitlab.com/decong.yu/django-rest-yu
+
+build:
+  stage: build
+  services:
+    - docker:dind
+    variables:
+      DOCKER_DRIVER: overlay2
+    script:
+      - cd app
+      - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+      - docker build
+        --cach-from $IMAGE:latest || true
+        --tage $IMAGE:latest
+        --file ./Dockerfile.prod
+        "."
+      - docker push $IMAGE:latest
+
+test:
+  stage: test
+  image: $IMAGE:latest
+  services:
+    - postgres:latest
+  variables:
+    POSTGRES_DB: users
+    POSTGRES_USER: runner
+    POSTGRES_PASSWORD: runner
+    DATABASE_TEST_URL: postgresql://runner:runner@postgres:5432/users
+  script:
+    - cd app
+    - pytest -p no:warnings --cov=.
+    - flake8 .
+    - black --check --exclude=migrations .
+    - isort . --check-only
+    
